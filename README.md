@@ -14,6 +14,7 @@
 - ✅ 语义检索（向量检索）
 - ✅ 基于 RAG 的对话问答
 - ✅ 本地 SQLite + ChromaDB 存储
+- ✅ **🆕 60+ 免费阿里云 Bailian 模型自由切换** - 支持 qwen3-max、qwen-plus、text-embedding-v3、paraformer-v2 等
 
 ---
 
@@ -21,6 +22,8 @@
 
 ![首页截图](assets/screenshots/home.png)
 ![对话界面截图](assets/screenshots/chat.png)
+![模型选择器](assets/screenshots/model-selector.png)
+*新增：60+ 免费阿里云 Bailian 模型自由切换*
 
 ## B站演示视频：
 [演示视频](https://b23.tv/bGXyhjU)
@@ -65,12 +68,50 @@ npm run dev
 
 ---
 
+## 🤖 模型选择功能（本 Fork 新增）
+
+本分支新增 **60+ 免费阿里云 Bailian 模型**支持，用户可在界面中自由切换，无需修改配置文件：
+
+![模型选择界面](assets/screenshots/model-selector.png)
+
+### 支持的模型类型
+
+| 类型 | 模型 | 说明 |
+|------|------|------|
+| **对话模型** | qwen3-max | Qwen3 最强模型，免费 100 万 Token |
+| | qwen3.5-plus | Qwen3.5 升级版 |
+| | qwen-plus | 通义千问 Plus 版 |
+| | qwen-turbo | 极速版 |
+| | qwen-flash | 轻量版 |
+| **向量模型** | text-embedding-v3 | 文本向量模型 |
+| | text-embedding-async-v3 | 异步版本 |
+| **语音模型** | paraformer-v2 | 语音识别 |
+| | sensevoice-v1 | 语音理解 |
+| | paraformer-realtime-v2 | 实时语音识别 |
+
+> 所有模型均使用阿里云 Bailian（DashScope）免费额度，零成本体验！
+
+### 使用方式
+
+1. 点击首页右上角的模型图标
+2. 在弹窗中选择需要的模型类型（对话/向量/语音）
+3. 选择具体模型，切换后立即生效
+
+### API 端点
+
+- `GET /api/models` - 获取可用模型列表
+- `POST /api/models/set` - 切换当前模型
+
+---
+
+---
+
 ## 🧠 工作流程
 
 1. 选择收藏夹  
 2. 拉取视频 → 音频转写（ASR）  
 3. 生成向量 → 构建知识库  
-4. 对话/检索问答  
+4. 对话/检索问答
 
 ---
 
@@ -139,6 +180,14 @@ A：B 站音频直链存在鉴权/过期/区域限制，只有公网可直接拉
 
 ---
 
+## 🧩 TodoList
+
+- 对话存储、会话管理、检索历史对话记录
+- 支持 B 站分 P 视频
+- 适配更多 LLM 与向量模型
+
+---
+
 > 免责声明：本项目仅供个人学习与技术研究，使用者需自行遵守相关平台协议与法律法规，禁止用于未授权的商业或违规用途。
 
 ---
@@ -146,11 +195,3 @@ A：B 站音频直链存在鉴权/过期/区域限制，只有公网可直接拉
 ## 📜 License
 
 MIT
-
----
-
-## 🧩 TodoList
-
-- 对话存储、会话管理、检索历史对话记录
-- 支持 B 站分 P 视频
-- 适配更多 LLM 与向量模型
