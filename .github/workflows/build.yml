@@ -40,8 +40,18 @@ jobs:
           
       - name: Copy frontend build to backend static folder
         run: |
-          New-Item -ItemType Directory -Force -Path app/static
-          Copy-Item -Recurse -Force frontend/out/* app/static/
+          if (Test-Path "frontend/out") {
+            New-Item -ItemType Directory -Force -Path app/static
+            Copy-Item -Recurse -Force frontend/out/* app/static/
+          } elseif (Test-Path "frontend/.next/server/app") {
+            Write-Host "Using .next build - copying static files"
+            New-Item -ItemType Directory -Force -Path app/static
+            Get-ChildItem -Path frontend/.next -Recurse -File | Copy-Item -Destination { $_.FullName -replace [regex]::Escape("frontend\.next"), "app/static" }
+          } else {
+            Write-Host "Frontend build not found!"
+            Get-ChildItem -Path frontend
+            exit 1
+          }
           
       - name: Create startup script
         run: |

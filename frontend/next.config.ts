@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 静态导出（用于打包 EXE）
+  output: 'export',
   // 允许加载外部图片
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
