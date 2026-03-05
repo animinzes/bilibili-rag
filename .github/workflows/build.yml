@@ -26,7 +26,6 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -r requirements.txt
-          pip install pyinstaller
           
       - name: Install Node dependencies
         run: |
@@ -43,74 +42,35 @@ jobs:
           if (Test-Path "frontend/out") {
             New-Item -ItemType Directory -Force -Path app/static
             Copy-Item -Recurse -Force frontend/out/* app/static/
-          } elseif (Test-Path "frontend/.next/server/app") {
-            Write-Host "Using .next build - copying static files"
-            New-Item -ItemType Directory -Force -Path app/static
-            Get-ChildItem -Path frontend/.next -Recurse -File | Copy-Item -Destination { $_.FullName -replace [regex]::Escape("frontend\.next"), "app/static" }
-          } else {
-            Write-Host "Frontend build not found!"
-            Get-ChildItem -Path frontend
-            exit 1
           }
           
       - name: Create startup script
         run: |
-          Set-Content -Path start_bilibili_rag.bat -Value @"
+          Set-Content -Path start.bat -Value @"
           @echo off
-          echo Starting Bilibili RAG...
-          start "Backend" python -m uvicorn app.main:app --port 8000 --host 0.0.0.0
-          timeout /t 3 /nobreak > nul
+          echo ============================================
+          echo    Bilibili RAG 知识库系统
+          echo ============================================
+          echo.
+          echo 启动服务中...
+          python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+          "@
+          
+          Set-Content -Path run.bat -Value @"
+          @echo off
+          start cmd /k python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+          timeout /t 2 /nobreak > nul
           start http://localhost:8000
           "@
           
-      - name: Build EXE with PyInstaller
+      - name: Create release package
         run: |
-          Set-Content -Path launcher.py -Value @"
-          import subprocess
-          import sys
-          import os
-          import webbrowser
-          import time
-          import threading
-
-          def open_browser():
-              time.sleep(3)
-              webbrowser.open('http://localhost:8000')
-
-          if __name__ == '__main__':
-              print("=" * 50)
-              print("Bilibili RAG 启动中...")
-              print("=" * 50)
-              print("后端服务: http://localhost:8000")
-              print("API 文档: http://localhost:8000/docs")
-              print("")
-              print("按 Ctrl+C 停止服务")
-              print("=" * 50)
-              
-              backend_process = subprocess.Popen(
-                  [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
-                  cwd=os.getcwd()
-              )
-              
-              threading.Thread(target=open_browser, daemon=True).start()
-              
-              try:
-                  backend_process.wait()
-              except KeyboardInterrupt:
-                  print("\n正在停止服务...")
-                  backend_process.terminate()
-          "@
+          Compress-Archive -Path app,data,assets,logs,start.bat,run.bat,.env.example,requirements.txt -DestinationPath bilibili-rag.zip -Force
           
-          pyinstaller --onefile --name bilibili-rag --console launcher.py --add-data "app;app" --add-data "data;data" --add-data "assets;assets" --add-data "logs;logs" --hidden-import=uvicorn --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.main --hidden-import=uvicorn.config --hidden-import=fastapi --hidden-import=langchain --hidden-import=chromadb --hidden-import=dashscope --collect-all=uvicorn --collect-all=fastapi --collect-all=langchain --collect-all=chromadb --collect-all=dashscope
-          
-      - name: Rename EXE
-        run: |
-          Move-Item -Force dist/bilibili-rag.exe bilibili-rag.exe
-          
-      - name: Upload EXE to Release
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: bilibili-rag.exe
+          files: bilibili-rag.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
