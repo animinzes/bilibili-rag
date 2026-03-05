@@ -40,23 +40,22 @@ jobs:
           
       - name: Copy frontend build to backend static folder
         run: |
-          mkdir -p app/static
-          cp -r frontend/out/* app/static/
+          New-Item -ItemType Directory -Force -Path app/static
+          Copy-Item -Recurse -Force frontend/out/* app/static/
           
       - name: Create startup script
         run: |
-          # Create a simple batch file to run both
+          Set-Content -Path start_bilibili_rag.bat -Value @"
           @echo off
           echo Starting Bilibili RAG...
           start "Backend" python -m uvicorn app.main:app --port 8000 --host 0.0.0.0
           timeout /t 3 /nobreak > nul
           start http://localhost:8000
-          ) > start_bilibili_rag.bat
+          "@
           
       - name: Build EXE with PyInstaller
         run: |
-          # Create a simple launcher Python script
-          @'
+          Set-Content -Path launcher.py -Value @"
           import subprocess
           import sys
           import os
@@ -70,7 +69,7 @@ jobs:
 
           if __name__ == '__main__':
               print("=" * 50)
-              print("🚀 Bilibili RAG 启动中...")
+              print("Bilibili RAG 启动中...")
               print("=" * 50)
               print("后端服务: http://localhost:8000")
               print("API 文档: http://localhost:8000/docs")
@@ -78,13 +77,11 @@ jobs:
               print("按 Ctrl+C 停止服务")
               print("=" * 50)
               
-              # Start backend in background
               backend_process = subprocess.Popen(
                   [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
                   cwd=os.getcwd()
               )
               
-              # Open browser
               threading.Thread(target=open_browser, daemon=True).start()
               
               try:
@@ -92,13 +89,13 @@ jobs:
               except KeyboardInterrupt:
                   print("\n正在停止服务...")
                   backend_process.terminate()
-          '@ | Out-File -FilePath launcher.py -Encoding utf8
+          "@
           
           pyinstaller --onefile --name bilibili-rag --console launcher.py --add-data "app;app" --add-data "data;data" --add-data "assets;assets" --add-data "logs;logs" --hidden-import=uvicorn --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.main --hidden-import=uvicorn.config --hidden-import=fastapi --hidden-import=langchain --hidden-import=chromadb --hidden-import=dashscope --collect-all=uvicorn --collect-all=fastapi --collect-all=langchain --collect-all=chromadb --collect-all=dashscope
           
       - name: Rename EXE
         run: |
-          mv dist/bilibili-rag.exe bilibili-rag.exe
+          Move-Item -Force dist/bilibili-rag.exe bilibili-rag.exe
           
       - name: Upload EXE to Release
         uses: softprops/action-gh-release@v2
