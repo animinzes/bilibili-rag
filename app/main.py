@@ -6,8 +6,11 @@ Bilibili RAG 知识库系统
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from loguru import logger
 import sys
+import os
 
 from app.config import settings, ensure_directories
 from app.database import init_db
@@ -79,6 +82,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 静态文件服务（前端构建产物）
+static_path = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+    
+    @app.get("/")
+    async def serve_frontend():
+        """服务前端页面"""
+        index_path = os.path.join(static_path, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"message": "API 运行中，请先构建前端"}
 
 # 注册路由
 app.include_router(auth.router)
