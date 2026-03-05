@@ -1,7 +1,7 @@
 """
 Bilibili RAG 知识库系统
 
-RAG 服务模块 - 向量存储与问答
+RAG 服务模块 - 向量存储与问答（支持模型自动轮换）
 """
 from typing import List, Optional
 from loguru import logger
@@ -12,7 +12,7 @@ from langchain.schema import Document
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.output_parser import StrOutputParser
-from app.config import settings
+from app.config import settings, get_free_model
 from app.models import VideoContent
 
 
@@ -35,19 +35,23 @@ class RAGService:
         """
         self.collection_name = collection_name
         
+        # 自动选择免费的 Embedding 模型
+        embedding_model = get_free_model("embedding", settings.embedding_model)
+        logger.info(f"使用 Embedding 模型: {embedding_model}")
+        
         # 初始化 Embeddings (使用 DashScope 原生支持)
         try:
             from langchain_community.embeddings import DashScopeEmbeddings
             self.embeddings = DashScopeEmbeddings(
                 dashscope_api_key=settings.openai_api_key,
-                model=settings.embedding_model
+                model=embedding_model
             )
             logger.info("使用 DashScopeEmbeddings 初始化成功")
         except ImportError:
             self.embeddings = OpenAIEmbeddings(
                 api_key=settings.openai_api_key,
                 base_url=settings.openai_base_url,
-                model=settings.embedding_model,
+                model=embedding_model,
                 check_embedding_ctx_length=False
             )
         
@@ -58,11 +62,15 @@ class RAGService:
             persist_directory=settings.chroma_persist_directory
         )
         
+        # 自动选择免费的 LLM 模型
+        llm_model = get_free_model("llm", settings.llm_model)
+        logger.info(f"使用 LLM 模型: {llm_model}")
+        
         # 初始化 LLM
         self.llm = ChatOpenAI(
             api_key=settings.openai_api_key,
             base_url=settings.openai_base_url,
-            model=settings.llm_model,
+            model=llm_model,
             temperature=0.5
         )
         

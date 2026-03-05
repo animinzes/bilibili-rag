@@ -5,13 +5,15 @@ import LoginModal from "@/components/LoginModal";
 import DemoFlowModal from "@/components/DemoFlowModal";
 import SourcesPanel from "@/components/SourcesPanel";
 import ChatPanel from "@/components/ChatPanel";
+import ModelSelector from "@/components/ModelSelector";
 import { UserInfo, authApi } from "@/lib/api";
 
 export default function Home() {
   const [session, setSession] = useState<string | null>(null);
   const [user, setUser] = useState<string | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
+const [showLogin, setShowLogin] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [showModelSelector, setShowModelSelector] = useState(false);
   const [statsKey, setStatsKey] = useState(0);
   const [selectedFolderIds, setSelectedFolderIds] = useState<number[]>([]);
 
@@ -95,7 +97,19 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="topbar-actions">
+<div className="topbar-actions">
+          {/* 模型选择按钮 */}
+          <button 
+            onClick={() => setShowModelSelector(true)} 
+            className="btn-icon" 
+            title="选择模型"
+            style={{ marginRight: '8px' }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </button>
+          
           {user ? (
             <>
               <span className="user-chip">
@@ -188,8 +202,9 @@ export default function Home() {
         <p>BiliMind © 2026 · 基于 Bilibili API 构建 · 由 AI 驱动</p>
       </footer>
 
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onSuccess={onLogin} />
+<LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onSuccess={onLogin} />
       <DemoFlowModal isOpen={showDemo} onClose={() => setShowDemo(false)} />
+      {showModelSelector && <ModelSelector onClose={() => setShowModelSelector(false)} />}
     </div>
   );
 }

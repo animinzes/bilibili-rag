@@ -292,3 +292,32 @@ export const chatApi = {
             { method: "POST" }
         ),
 };
+
+// ==================== 模型管理 ====================
+
+export interface ModelInfo {
+    id: string;
+    name: string;
+    desc: string;
+}
+
+export interface ModelListResponse {
+    llm_models: ModelInfo[];
+    embedding_models: ModelInfo[];
+    asr_models: ModelInfo[];
+    current_llm: string;
+    current_embedding: string;
+    current_asr: string;
+}
+
+export const modelApi = {
+    // 获取所有模型列表
+    getModels: () => request<ModelListResponse>("/api/models"),
+    
+    // 设置当前模型
+    setModel: (modelType: string, modelId: string) =>
+        request<{ success: boolean; message: string; current: any }>("/api/models/set", {
+            method: "POST",
+            body: JSON.stringify({ model_type: modelType, model_id: modelId }),
+        }),
+};

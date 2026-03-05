@@ -1,7 +1,7 @@
 """
 Bilibili RAG 知识库系统
 
-ASR 服务 - 使用 DashScope 录音文件识别
+ASR 服务 - 使用 DashScope 录音文件识别（支持模型自动轮换）
 """
 import asyncio
 import json
@@ -20,11 +20,11 @@ from dashscope.common.utils import default_headers, join_url
 from dashscope.utils.oss_utils import OssUtils
 from loguru import logger
 
-from app.config import settings
+from app.config import settings, get_free_model
 
 
 class ASRService:
-    """音频转文字服务（DashScope）"""
+    """音频转文字服务（DashScope）- 支持免费模型自动选择"""
 
     def __init__(
         self,
@@ -35,7 +35,12 @@ class ASRService:
     ):
         self.api_key = api_key or settings.openai_api_key
         self.base_url = base_url or getattr(settings, "dashscope_base_url", None)
-        self.model = model or getattr(settings, "asr_model", "fun-asr")
+        
+        # 自动选择免费的 ASR 模型
+        asr_model = get_free_model("asr", model or settings.asr_model)
+        self.model = asr_model
+        logger.info(f"使用 ASR 模型: {asr_model}")
+        
         self.timeout = timeout or getattr(settings, "asr_timeout", 600)
         self.local_model = getattr(settings, "asr_model_local", self.model)
         self.input_format = getattr(settings, "asr_input_format", "pcm")
